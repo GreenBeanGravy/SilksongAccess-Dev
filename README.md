@@ -1,7 +1,7 @@
 # SilksongAccess-Dev
 Development of the Hollow Knight: Silksong BVI accessibility mod
 
-# How to test/install, Updated 11/14/2025
+# How to test/install, Updated 12/4/2025
 ## Must have any version of Hollow Knight Silksong installed
 - Download and extract the `Silksong Access.zip` file from this message
 - Open the folder and copy the contents, being `winhttp.dll`, `BepInEx folder`, `.doorstop_config`, and `doorstop_config.ini`
