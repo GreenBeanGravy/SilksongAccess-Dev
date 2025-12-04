@@ -21,6 +21,7 @@ Development of the Hollow Knight: Silksong BVI accessibility mod
 - Defeating enemies
 - Cutscenes starting and ending
 - Prompt to skip cutscenes
+- Passive enemy pings
 
 # WORKING ON:
 - Full exploration and navigation
