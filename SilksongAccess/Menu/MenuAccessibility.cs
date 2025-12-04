@@ -68,6 +68,16 @@ namespace SilksongAccess.Menu
             {
                 elementText = AnnounceSaveSlot(saveSlot, go);
             }
+            // Check if this is a control binding menu item (keyboard or controller)
+            else if (_isRebinding && (go.name.Contains("Binding") || go.name.Contains("Button") || go.name.Contains("Key")))
+            {
+                // Use enhanced control binding announcement
+                elementText = ControlBindingAccessibility.GetFullBindingAnnouncement(go);
+                if (string.IsNullOrEmpty(elementText))
+                {
+                    elementText = GetTextFromChildren(go);
+                }
+            }
             else
             {
                 elementText = GetTextFromChildren(go);
@@ -130,7 +140,9 @@ namespace SilksongAccess.Menu
                         }
 
                         if (sb.Length > 0) sb.Append(", ");
-                        sb.Append($"{index + 1} of {selectables.Count}");
+                        sb.Append((index + 1).ToString());
+                        sb.Append(" of ");
+                        sb.Append(selectables.Count.ToString());
                     }
                 }
             }
@@ -150,8 +162,8 @@ namespace SilksongAccess.Menu
             else if (slotName.Contains("Three")) slotNumber = "3";
             else if (slotName.Contains("Four")) slotNumber = "4";
 
-            if (selectedObject.name == "ClearSaveButton") return $"Clear Save, Slot {slotNumber}";
-            if (selectedObject.name == "RestoreSaveButton") return $"Restore Save, Slot {slotNumber}";
+            if (selectedObject.name == "ClearSaveButton") return "Clear Save, Slot " + slotNumber;
+            if (selectedObject.name == "RestoreSaveButton") return "Restore Save, Slot " + slotNumber;
 
             Transform activeSaveContainer = saveSlot.transform.Find("ActiveSaveSlot");
             Transform newGameContainer = saveSlot.transform.Find("NewGameText");
@@ -165,26 +177,31 @@ namespace SilksongAccess.Menu
 
                     if (playTimeText != null && playTimeText.gameObject.activeInHierarchy && playTimeText.text.Trim() == "0m")
                     {
-                        return $"Slot {slotNumber}, New Game";
+                        return "Slot " + slotNumber + ", New Game";
                     }
 
                     StringBuilder sb = new StringBuilder();
-                    sb.Append($"Slot {slotNumber}");
+                    sb.Append("Slot ");
+                    sb.Append(slotNumber);
 
                     var locationText = bottomSection.Find("LocationText")?.GetComponent<Text>();
                     var completionText = bottomSection.Find("CompletionText")?.GetComponent<Text>();
 
                     if (locationText != null && locationText.gameObject.activeInHierarchy && !string.IsNullOrWhiteSpace(locationText.text))
                     {
-                        sb.Append($", {locationText.text.Trim()}");
+                        sb.Append(", ");
+                        sb.Append(locationText.text.Trim());
                     }
                     if (playTimeText != null && playTimeText.gameObject.activeInHierarchy && !string.IsNullOrWhiteSpace(playTimeText.text))
                     {
-                        sb.Append($", Time {playTimeText.text.Trim()}");
+                        sb.Append(", Time ");
+                        sb.Append(playTimeText.text.Trim());
                     }
                     if (completionText != null && completionText.gameObject.activeInHierarchy && !string.IsNullOrWhiteSpace(completionText.text))
                     {
-                        sb.Append($", {completionText.text.Trim()} completion");
+                        sb.Append(", ");
+                        sb.Append(completionText.text.Trim());
+                        sb.Append(" completion");
                     }
                     return sb.ToString();
                 }
@@ -192,10 +209,10 @@ namespace SilksongAccess.Menu
 
             if (newGameContainer != null && newGameContainer.gameObject.activeInHierarchy)
             {
-                return $"Slot {slotNumber}, New Game";
+                return "Slot " + slotNumber + ", New Game";
             }
 
-            return $"Slot {slotNumber}";
+            return "Slot " + slotNumber;
         }
 
         // --- UI HARMONY PATCHES ---
@@ -371,8 +388,97 @@ namespace SilksongAccess.Menu
 
                 if ((isKeyboardListen && isKeyboardBind) || (isControllerListen && isControllerBind))
                 {
-                    SpeechSynthesizer.Speak($"{binding.Name} bound to {__instance.Name}", true);
+                    string message = binding.Name + " bound to " + __instance.Name;
+                    SpeechSynthesizer.Speak(message, true);
                 }
+            }
+        }
+
+        // --- SETUP MENU ANNOUNCEMENTS (Overscan/Brightness) ---
+
+        [HarmonyPatch(typeof(UIManager), "GoToOverscanMenu")]
+        private static class UIManager_GoToOverscanMenu_Patch
+        {
+            private static void Postfix()
+            {
+                // Give full instructions for the overscan adjustment screen
+                Plugin.Instance.StartCoroutine(AnnounceOverscanInstructions());
+            }
+
+            private static IEnumerator AnnounceOverscanInstructions()
+            {
+                // Wait for menu to fully load
+                yield return new WaitForSeconds(0.3f);
+
+                string message = "Overscan adjustment. Use arrow keys to adjust screen boundaries. Press down arrow to navigate to Done when finished.";
+                SpeechSynthesizer.Speak(message, true);
+            }
+        }
+
+        [HarmonyPatch(typeof(UIManager), "GoToBrightnessMenu")]
+        private static class UIManager_GoToBrightnessMenu_Patch
+        {
+            private static void Postfix()
+            {
+                // Give full instructions for the brightness adjustment screen
+                Plugin.Instance.StartCoroutine(AnnounceBrightnessInstructions());
+            }
+
+            private static IEnumerator AnnounceBrightnessInstructions()
+            {
+                // Wait for menu to fully load
+                yield return new WaitForSeconds(0.3f);
+
+                string message = "Brightness adjustment. Use left and right arrow keys to adjust brightness. Press down arrow to navigate to Done when finished.";
+                SpeechSynthesizer.Speak(message, true);
+            }
+        }
+
+        // --- LANGUAGE SELECTION ANNOUNCEMENT ---
+        // Note: The game's language defaults are controlled by MenuLanguageSetting.
+        // We improve accessibility by clearly announcing the current selection
+        // so users can easily navigate to their preferred language.
+
+        [HarmonyPatch(typeof(MenuLanguageSetting), "RefreshControls")]
+        private static class MenuLanguageSetting_RefreshControls_Patch
+        {
+            private static void Postfix(MenuLanguageSetting __instance)
+            {
+                // When the language setting menu appears, announce the current selection clearly
+                try
+                {
+                    var currentLang = TeamCherry.Localization.Language.CurrentLanguage();
+                    _logger?.LogInfo("Language menu loaded. Current: " + currentLang.ToString());
+
+                    // Announce which language is currently selected
+                    // This helps users know their starting point in the language list
+                    Plugin.Instance.StartCoroutine(AnnounceCurrentLanguage(currentLang));
+                }
+                catch (System.Exception ex)
+                {
+                    _logger?.LogError("Error announcing language: " + ex.Message);
+                }
+            }
+
+            private static IEnumerator AnnounceCurrentLanguage(TeamCherry.Localization.LanguageCode lang)
+            {
+                yield return new WaitForSeconds(0.3f);
+                string langName = lang.ToString();
+
+                // Convert language code to readable name
+                string readableName = langName;
+                if (langName == "EN") readableName = "English";
+                else if (langName == "PT") readableName = "Portuguese";
+                else if (langName == "ES") readableName = "Spanish";
+                else if (langName == "FR") readableName = "French";
+                else if (langName == "DE") readableName = "German";
+                else if (langName == "IT") readableName = "Italian";
+                else if (langName == "JA") readableName = "Japanese";
+                else if (langName == "KO") readableName = "Korean";
+                else if (langName == "ZH_HANS") readableName = "Chinese Simplified";
+                else if (langName == "RU") readableName = "Russian";
+
+                SpeechSynthesizer.Speak("Current language: " + readableName + ". Use left and right arrow keys to change.", true);
             }
         }
     }

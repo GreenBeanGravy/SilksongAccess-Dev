@@ -25,6 +25,9 @@ namespace SilksongAccess
             MenuAccessibility.Initialize(Logger);
             Logger.LogInfo("Menu Accessibility module initialized.");
 
+            Menu.ControlBindingAccessibility.Initialize(Logger);
+            Logger.LogInfo("Control Binding Accessibility module initialized.");
+
             InventoryAccessibility.Initialize(Logger);
             Logger.LogInfo("Inventory Accessibility module initialized.");
 
@@ -39,6 +42,10 @@ namespace SilksongAccess
 
             EnemyAccessibility.Initialize(Logger);
             Logger.LogInfo("Enemy Accessibility module initialized.");
+
+            AutoAimAccessibility.Initialize(Logger);
+            AutoAimAccessibility.EnableAutoAimAttacks = true;
+            Logger.LogInfo("Auto-Aim Accessibility module initialized and enabled.");
 
             CutsceneAccessibility.Initialize(Logger);
             Logger.LogInfo("Cutscene Accessibility module initialized.");

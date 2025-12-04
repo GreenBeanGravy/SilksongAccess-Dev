@@ -32,6 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Audio\SynthesizedSoundFactory.cs" />
+    <Compile Include="Audio\SpatialAudioPanner.cs" />
+    <Compile Include="Audio\EnemyAudioPingManager.cs" />
+    <Compile Include="Gameplay\AutoAimAccessibility.cs" />
     <Compile Include="Gameplay\CollectableAccessibility.cs" />
     <Compile Include="Gameplay\EnemyAccessibility.cs" />
     <Compile Include="Gameplay\InteractionAccessibility.cs" />
@@ -40,6 +44,8 @@
     <Compile Include="Gameplay\OtherAccessibility.cs" />
     <Compile Include="Gameplay\HeroAccessibility.cs" />
     <Compile Include="Gameplay\ShopAccessibility.cs" />
+    <Compile Include="GameReadyHelper.cs" />
+    <Compile Include="Menu\ControlBindingAccessibility.cs" />
     <Compile Include="Menu\CutsceneAccessibility.cs" />
     <Compile Include="Menu\FSMMenuAccessibility.cs" />
     <Compile Include="Menu\MenuAccessibility.cs" />
